@@ -20,32 +20,41 @@ layout.
 3. Re-derive keyword representations with a custom vectorizer (stopwords +
    brand names stripped, 1–3 word phrases allowed) so `top_keywords`
    reads cleanly.
-4. **Human labeling step** (`TOPIC_LABEL_MAP`, hardcoded in the notebook):
-   after inspecting the keyword-only `phase5_topic_info.csv`, each numeric
-   `topic_id` is manually assigned a short, human-readable label — e.g.
-   topic 4 → `"high mileage & maintenance reliability"`. This is a
-   deliberate step, not automated; BERTopic's raw keyword lists aren't
-   what gets matched against a user's free-text `topic_filter` in the MCP
-   server, the human labels are.
+4. **Human labeling step**: after inspecting the keyword-only
+   `phase5_topic_info.csv`, each numeric `topic_id` is manually assigned a
+   short, human-readable label — e.g. topic 4 →
+   `"high mileage & maintenance reliability"`. This is a deliberate step,
+   not automated; BERTopic's raw keyword lists aren't what gets matched
+   against a user's free-text `topic_filter` in the MCP server, the human
+   labels are. The mapping lives in
+   [`topic_labels.json`](topic_labels.json) (`topic_id` → label) — a
+   plain, reviewable/diffable JSON file, not a dict buried in notebook
+   edits. Relabeling means editing that file; the notebook only reads it
+   (see its `TOPIC_LABELS_PATH` cell — the same file also needs to be
+   uploaded to the Kaggle Dataset's `config/` folder, since Kaggle can't
+   read this repo directly).
 5. Merge topic assignments + sentiment predictions + brand/year/rating
    metadata into the final `aspect_sentiment_table.csv`.
 
-## The 39 human-labeled topics (+ 1 outlier bucket = 40 rows total)
+## The 39 human-labeled topics (+ 1 "too short to analyze" bucket = 40 rows total)
 
-`TOPIC_LABEL_MAP` assigns human-readable labels to **39 topics**
+`topic_labels.json` assigns human-readable labels to **39 topics**
 (`topic_id` 0–38, e.g. `"bmw 3 series & sedan driving dynamics"`,
 `"ride comfort & suspension smoothness"`, `"electric vehicle range &
-charging infrastructure"`). BERTopic's `topic_id = -1` — the bucket for
-documents that stayed unclassified even after outlier reduction — is kept
-as a distinct 40th row labeled `"No clear topic"` rather than merged into
-one of the 39 or dropped, so downstream tools can distinguish "no topic
-found" from "topic not asked for."
+charging infrastructure"`). In the current run, BERTopic's outlier-reduction
+pass (step 2 above) successfully reassigned every `-1`/unclassified
+document to a real topic, so there's no separate "no clear topic" row —
+the 40th row in `phase5_topic_info.csv` is instead the reviews that were
+excluded from topic modeling entirely for being too short (step 1), with a
+blank `topic_id` and `topic_label = "Not analyzed (review too short)"`.
+(If a future rerun *does* leave genuine outliers after reduction, those
+would appear as their own `topic_id = -1` row — the merge step is written
+to handle both cases, it just happens that this dataset doesn't have any.)
 
-This is why `data/processed/phase5_topic_info.csv` has **40 rows**: 39
-human-labeled topics + 1 outlier row. Both `get_common_complaints` and
-`get_common_praises` in `mcp_server/` match a caller's `topic_filter`
-against these 39 real labels (substring, then fuzzy match) — see the
-top-level README's "`topic_filter` matching" section.
+Both `get_common_complaints` and `get_common_praises` in `mcp_server/`
+match a caller's `topic_filter` against the 39 real labels (substring,
+then fuzzy match) — see the top-level README's "`topic_filter` matching"
+section.
 
 ## Where the results live
 
