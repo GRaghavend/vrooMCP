@@ -50,15 +50,20 @@ data-quality findings and how they informed later steps.
 
 `sentimentclassification.ipynb` evaluates candidate sentiment models
 (compared against the gold-labeled 3,700-review set validated in step 1)
-and applies the winning model to the full 38K reviews. This notebook was
-run on Kaggle (paths under `/kaggle/input/...` and `/kaggle/working/...`
-are that platform's, left as-is — its local-relative outputs, e.g.
+and applies the winning model to the full 38K reviews. This notebook runs
+on Kaggle, not locally: `/kaggle/working/...` output paths are that
+platform's own scratch directory and are left as-is, but the
+`/kaggle/input/.../car-review-chatbot/...` *input* paths now mirror this
+repo's `data/raw` and `data/interim` — i.e. the Kaggle Dataset itself
+needs a `raw/` and `interim/` subfolder matching this repo before the
+notebook will run (its local-relative outputs, e.g.
 `phase4_model_comparison.csv`, are written under `data/interim/`). Its
 sentiment predictions feed directly into topic modelling below.
 
 ## 3. Topic modelling — `topic_modelling/`
 
-`topicmodelling.ipynb` (also run on Kaggle) runs BERTopic over the review
+`topicmodelling.ipynb` (also run on Kaggle, same `raw/`/`interim/`
+Kaggle-Dataset-layout requirement as above) runs BERTopic over the review
 text and joins the result with the sentiment predictions from step 2,
 producing `aspect_sentiment_table.csv` — one row per review with its
 topic, keywords, and sentiment. Downloaded from Kaggle's working
