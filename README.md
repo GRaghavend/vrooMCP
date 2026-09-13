@@ -30,6 +30,7 @@ data/
   raw/                       Original review CSVs (input to step 1)
   interim/                   Intermediate pipeline artifacts
   processed/                 Final tables the MCP server reads
+  README.md                  What lives in each of the 3 layers above, and who produces/consumes it
 mcp_server/                4. The MCP server, its tools, and the Ollama client
 scripts/                   Throwaway manual-run scripts (not shipped code)
 logs/                       Structured JSON logs (git-ignored, created at runtime)
@@ -58,7 +59,11 @@ repo's `data/raw` and `data/interim` — i.e. the Kaggle Dataset itself
 needs a `raw/` and `interim/` subfolder matching this repo before the
 notebook will run (its local-relative outputs, e.g.
 `phase4_model_comparison.csv`, are written under `data/interim/`). Its
-sentiment predictions feed directly into topic modelling below.
+sentiment predictions feed directly into topic modelling below. See
+[`sentiment_classification/README.md`](sentiment_classification/README.md)
+for the validation-set-vs-actual-dataset distinction, the 4 candidate
+models compared, and exactly where the comparison results and final
+predictions are stored.
 
 ## 3. Topic modelling — `topic_modelling/`
 
@@ -67,7 +72,10 @@ Kaggle-Dataset-layout requirement as above) runs BERTopic over the review
 text and joins the result with the sentiment predictions from step 2,
 producing `aspect_sentiment_table.csv` — one row per review with its
 topic, keywords, and sentiment. Downloaded from Kaggle's working
-directory into `data/processed/`.
+directory into `data/processed/`. See
+[`topic_modelling/README.md`](topic_modelling/README.md) for the full
+pipeline, including the human topic-labeling step (39 labeled topics + 1
+outlier bucket).
 
 `build_topic_info.py` is a small local, deterministic script that derives
 `data/processed/phase5_topic_info.csv` (one row per topic: id, label,
