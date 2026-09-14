@@ -9,6 +9,14 @@ layout.
 
 ## Pipeline
 
+`RANDOM_SEED = 42` is fixed at the top of the notebook and passed into
+UMAP (BERTopic's clustering backend), which is otherwise stochastic. This
+matters specifically because `topic_labels.json` labels are keyed by
+numeric `topic_id` — an unseeded rerun could assign different ids to the
+same clusters and silently misalign every human label. `np.random.seed`
+and `random.seed` are also set for good measure, though UMAP's
+`random_state` is the one that actually controls topic_id stability here.
+
 1. Fit BERTopic (`all-MiniLM-L6-v2` embeddings) over every review with
    more than `MIN_WORD_COUNT` (3) words — 38K reviews minus the very
    short ones, which are excluded as too noisy for topic assignment and
