@@ -12,9 +12,11 @@ LLM **composing multiple tool calls**, not by a dedicated tool — see
 "Design notes" below.
 
 **Status**: the MCP server and the Ollama chat loop are both working
-end-to-end (see `scripts/manual_test.py`). The one piece not yet built is
-a UI on top of the chat loop — everything below runs from the command line
-until that exists.
+end-to-end (see `scripts/manual_test.py`). The UI design is finalized
+(`frontend/design-export/`) but not yet wired to real data — see
+[`frontend/README.md`](frontend/README.md) for exactly what's done and
+what's left. Everything below runs from the command line until the
+frontend is a real, runnable app.
 
 ## Repository layout
 
@@ -32,6 +34,7 @@ data/
   processed/                 Final tables the MCP server reads
   README.md                  What lives in each of the 3 layers above, and who produces/consumes it
 mcp_server/                4. The MCP server, its tools, and the Ollama client
+frontend/                  5. The chat + evidence-panel UI (design finalized, not yet wired up)
 scripts/                   Throwaway manual-run scripts (not shipped code)
 logs/                       Structured JSON logs (git-ignored, created at runtime)
 ```

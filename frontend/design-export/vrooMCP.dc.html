@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: oklch(0.17 0.008 265); }
+  * { box-sizing: border-box; }
+  a { color: oklch(0.78 0.11 200); text-decoration: none; }
+  a:hover { color: oklch(0.86 0.11 200); text-decoration: underline; }
+  input { font-family: inherit; }
+  ::placeholder { color: oklch(0.52 0.01 265); }
+  ::-webkit-scrollbar { width: 9px; height: 9px; }
+  ::-webkit-scrollbar-thumb { background: oklch(0.32 0.01 265); border-radius: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+</style>
+</helmet>
+
+<div style="display: flex; height: 100vh; min-height: 620px; font-family: 'Inter Tight', Helvetica, sans-serif; color: oklch(0.92 0.006 265); background: oklch(0.17 0.008 265); overflow: hidden;">
+
+  <!-- CHAT -->
+  <section data-screen-label="Chat" style="flex: 1 1 56%; min-width: 380px; display: flex; flex-direction: column; border-right: 1px solid oklch(0.27 0.008 265);">
+    <header style="display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 22px; border-bottom: 1px solid oklch(0.27 0.008 265);">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="width: 24px; height: 24px; border-radius: 7px; background: linear-gradient(140deg, oklch(0.72 0.13 200), oklch(0.58 0.16 280)); display: block;"></span>
+        <span style="font-size: 15px; font-weight: 600; letter-spacing: -0.02em;">vrooMCP</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: oklch(0.6 0.01 265); border: 1px solid oklch(0.3 0.008 265); border-radius: 5px; padding: 2px 6px;">owner-review corpus</span>
+      </div>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: oklch(0.58 0.01 265);">{{ corpusLabel }}</span>
+    </header>
+
+    <div ref="{{ chatRef }}" style="flex: 1; overflow-y: auto; padding: 22px 22px 8px; display: flex; flex-direction: column; gap: 22px;">
+      <sc-for list="{{ messages }}" as="m" hint-placeholder-count="3">
+        <div style="display: flex; flex-direction: column; gap: 9px;">
+          <sc-if value="{{ m.isUser }}">
+            <div style="align-self: flex-end; max-width: 82%; background: oklch(0.26 0.012 265); border: 1px solid oklch(0.32 0.012 265); border-radius: 13px 13px 4px 13px; padding: 9px 13px; font-size: 14px; line-height: 1.45;">{{ m.text }}</div>
+          </sc-if>
+
+          <sc-if value="{{ m.isBot }}">
+            <div style="display: flex; flex-direction: column; gap: 10px; max-width: 95%;">
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                <sc-for list="{{ m.calls }}" as="c" hint-placeholder-count="1">
+                  <span style="display: inline-flex; align-items: center; gap: 7px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: oklch(0.7 0.05 200); background: oklch(0.22 0.02 220); border: 1px solid oklch(0.32 0.03 215); border-radius: 6px; padding: 3px 8px;">
+                    <span style="width: 5px; height: 5px; border-radius: 50%; background: {{ c.dot }};"></span>{{ c.label }}
+                  </span>
+                </sc-for>
+              </div>
+
+              <p style="margin: 0; font-size: 14.5px; line-height: 1.55; letter-spacing: -0.004em; text-wrap: pretty;">{{ m.answer }}</p>
+
+              <sc-if value="{{ m.note }}">
+                <p style="margin: 0; font-size: 13px; line-height: 1.5; color: oklch(0.68 0.008 265); text-wrap: pretty;">{{ m.note }}</p>
+              </sc-if>
+
+              <sc-if value="{{ m.hasEvidence }}">
+                <button type="button" onClick="{{ m.onPin }}" style="align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: {{ m.pinColor }}; background: transparent; border: 1px dashed {{ m.pinBorder }}; border-radius: 7px; padding: 5px 10px; cursor: pointer;" style-hover="border-style: solid;">{{ m.pinLabel }}</button>
+              </sc-if>
+
+              <sc-if value="{{ m.hasChips }}">
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                  <sc-for list="{{ m.chips }}" as="chip" hint-placeholder-count="3">
+                    <button type="button" onClick="{{ chip.onClick }}" style="font-family: inherit; font-size: 12px; color: oklch(0.84 0.02 230); background: oklch(0.235 0.012 265); border: 1px solid oklch(0.31 0.012 265); border-radius: 999px; padding: 5px 11px; cursor: pointer; transition: background 120ms;" style-hover="background: oklch(0.29 0.02 230);">{{ chip.label }}</button>
+                  </sc-for>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+
+      <sc-if value="{{ thinking }}">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: oklch(0.58 0.01 265);">calling tools…</span>
+      </sc-if>
+    </div>
+
+    <form onSubmit="{{ onSubmit }}" style="padding: 12px 22px 16px; display: flex; flex-direction: column; gap: 7px;">
+      <div style="display: flex; gap: 8px; align-items: center; background: oklch(0.215 0.01 265); border: 1px solid oklch(0.31 0.01 265); border-radius: 11px; padding: 4px 4px 4px 13px;">
+        <input ref="{{ inputRef }}" placeholder="Ask about a brand, a topic, a trend, or search review text…" style="flex: 1; border: none; outline: none; background: transparent; font-size: 14px; color: inherit; padding: 9px 0;">
+        <button type="submit" style="font-family: inherit; font-size: 13px; font-weight: 500; color: oklch(0.16 0.02 230); background: oklch(0.78 0.12 200); border: none; border-radius: 8px; padding: 9px 14px; cursor: pointer;" style-hover="background: oklch(0.85 0.12 200);">Send</button>
+      </div>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: oklch(0.52 0.01 265);">Covered brands: Audi · BMW · INFINITI · Lexus · Mercedes-Benz</span>
+    </form>
+  </section>
+
+  <!-- EVIDENCE -->
+  <aside data-screen-label="Evidence" style="flex: 1 1 44%; min-width: 340px; display: flex; flex-direction: column; background: oklch(0.195 0.008 265); overflow: hidden;">
+    <header style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; border-bottom: 1px solid oklch(0.27 0.008 265);">
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.09em; text-transform: uppercase; color: oklch(0.58 0.01 265);">Evidence · {{ ev.tool }}</span>
+        <span style="font-size: 14px; font-weight: 600; letter-spacing: -0.01em;">{{ ev.title }}</span>
+      </div>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: {{ ev.statusColor }}; border: 1px solid {{ ev.statusBorder }}; border-radius: 5px; padding: 3px 7px; white-space: nowrap;">{{ ev.status }}</span>
+    </header>
+
+    <div style="flex: 1; overflow-y: auto; padding: 18px 20px 34px; display: flex; flex-direction: column; gap: 16px;">
+
+      <!-- STAT TILES -->
+      <sc-if value="{{ ev.showTiles }}" hint-placeholder-val="{{ true }}">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px;">
+          <sc-for list="{{ ev.tiles }}" as="t" hint-placeholder-count="6">
+            <div style="background: oklch(0.225 0.008 265); border: 1px solid oklch(0.29 0.008 265); border-radius: 11px; padding: 12px 13px; display: flex; flex-direction: column; gap: 4px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.05em; text-transform: uppercase; color: oklch(0.6 0.01 265);">{{ t.label }}</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 500; color: {{ t.color }};">{{ t.value }}</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: oklch(0.55 0.01 265);">{{ t.sub }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- GROUPED BRAND BARS -->
+      <sc-if value="{{ ev.showBrands }}">
+        <div style="background: oklch(0.225 0.008 265); border: 1px solid oklch(0.29 0.008 265); border-radius: 12px; padding: 16px 16px 14px; display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 10px;">
+            <span style="font-size: 12.5px; font-weight: 600;">Average rating by brand</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: oklch(0.58 0.01 265);">0 – 5 · bar opacity = sample size</span>
+          </div>
+          <sc-for list="{{ ev.brandBars }}" as="b" hint-placeholder-count="3">
+            <div style="display: grid; grid-template-columns: 108px 1fr 92px; gap: 11px; align-items: center;">
+              <span style="font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ b.name }}</span>
+              <span style="display: block; height: 16px; border-radius: 5px; background: oklch(0.25 0.008 265); overflow: hidden;">
+                <span style="display: block; height: 100%; border-radius: 5px; width: {{ b.width }}; background: {{ b.color }}; opacity: {{ b.opacity }};"></span>
+              </span>
+              <span style="display: flex; flex-direction: column; align-items: flex-end; gap: 1px;">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px;">{{ b.rating }}</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: oklch(0.55 0.01 265);">{{ b.count }}</span>
+              </span>
+            </div>
+          </sc-for>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: oklch(0.55 0.01 265);">{{ ev.brandFootnote }}</span>
+        </div>
+      </sc-if>
+
+      <!-- TOPIC BARS -->
+      <sc-if value="{{ ev.showTopics }}">
+        <sc-for list="{{ ev.topicGroups }}" as="g" hint-placeholder-count="1">
+          <div style="background: oklch(0.225 0.008 265); border: 1px solid {{ g.border }}; border-radius: 12px; padding: 15px 16px 14px; display: flex; flex-direction: column; gap: 13px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+              <span style="display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 600;">
+                <span style="width: 8px; height: 8px; border-radius: 2px; background: {{ g.color }};"></span>{{ g.title }}
+              </span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: oklch(0.58 0.01 265);">{{ g.meta }}</span>
+            </div>
+            <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="4">
+              <div title="{{ r.tip }}" style="display: flex; flex-direction: column; gap: 5px;">
+                <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;">
+                  <span style="font-size: 12.5px; line-height: 1.35; text-wrap: pretty;">{{ r.label }}</span>
+                  <span style="font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: oklch(0.78 0.01 265); white-space: nowrap;">{{ r.count }}</span>
+                </div>
+                <span style="display: block; height: 8px; border-radius: 4px; background: oklch(0.25 0.008 265); overflow: hidden;">
+                  <span style="display: block; height: 100%; border-radius: 4px; width: {{ r.width }}; background: {{ g.color }};"></span>
+                </span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: oklch(0.56 0.01 265); line-height: 1.4;">{{ r.kw }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </sc-if>
+
+      <!-- TREND -->
+      <sc-if value="{{ ev.showTrend }}">
+        <div style="background: oklch(0.225 0.008 265); border: 1px solid oklch(0.29 0.008 265); border-radius: 12px; padding: 15px 16px 14px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+            <span style="font-size: 12.5px; font-weight: 600;">Avg rating by model year</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+              <sc-for list="{{ ev.trendLegend }}" as="l" hint-placeholder-count="2">
+                <span style="display: inline-flex; align-items: center; gap: 5px; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: oklch(0.72 0.01 265);">
+                  <span style="width: 10px; height: 3px; border-radius: 2px; background: {{ l.color }};"></span>{{ l.label }}
+                </span>
+              </sc-for>
+            </div>
+          </div>
+          <svg viewBox="0 0 440 190" style="width: 100%; height: auto; display: block; overflow: visible;">
+            <sc-for list="{{ ev.trendGrid }}" as="g" hint-placeholder-count="4">
+              <g>
+                <line x1="30" y1="{{ g.y }}" x2="436" y2="{{ g.y }}" stroke="oklch(0.27 0.008 265)" stroke-width="1"></line>
+                <text x="24" y="{{ g.ty }}" text-anchor="end" fill="oklch(0.55 0.01 265)" font-family="JetBrains Mono, monospace" font-size="9">{{ g.label }}</text>
+              </g>
+            </sc-for>
+            <sc-for list="{{ ev.trendTicks }}" as="t" hint-placeholder-count="5">
+              <text x="{{ t.x }}" y="182" text-anchor="middle" fill="oklch(0.55 0.01 265)" font-family="JetBrains Mono, monospace" font-size="9">{{ t.label }}</text>
+            </sc-for>
+            <sc-for list="{{ ev.trendLines }}" as="ln" hint-placeholder-count="2">
+              <polyline points="{{ ln.points }}" fill="none" stroke="{{ ln.color }}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"></polyline>
+            </sc-for>
+          </svg>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: oklch(0.55 0.01 265); line-height: 1.45;">{{ ev.trendFootnote }}</span>
+        </div>
+      </sc-if>
+
+      <!-- REVIEW MATCHES -->
+      <sc-if value="{{ ev.showReviews }}">
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: oklch(0.58 0.01 265);">{{ ev.reviewMeta }}</span>
+          <sc-for list="{{ ev.reviews }}" as="r" hint-placeholder-count="4">
+            <article style="background: oklch(0.225 0.008 265); border: 1px solid oklch(0.29 0.008 265); border-radius: 11px; padding: 12px 14px; display: flex; flex-direction: column; gap: 7px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <span style="display: inline-flex; align-items: center; gap: 8px;">
+                  <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: oklch(0.85 0.06 230); background: oklch(0.26 0.02 240); border-radius: 5px; padding: 2px 7px;">{{ r.badge }}</span>
+                  <span style="font-size: 12px; letter-spacing: 0.12em; color: {{ r.starColor }};">{{ r.stars }}</span>
+                </span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: oklch(0.55 0.01 265);">{{ r.date }}</span>
+              </div>
+              <p style="margin: 0; font-size: 12.5px; line-height: 1.5; color: oklch(0.84 0.006 265); text-wrap: pretty;">{{ r.text }}</p>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: oklch(0.5 0.01 265);">{{ r.meta }}</span>
+            </article>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <!-- STATUS / EMPTY STATES -->
+      <sc-if value="{{ ev.showStatus }}">
+        <div style="background: oklch(0.215 0.008 265); border: 1px dashed {{ ev.statusBorder }}; border-radius: 12px; padding: 20px 18px; display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: {{ ev.statusColor }};">{{ ev.status }}</span>
+          <span style="font-size: 13.5px; font-weight: 600; line-height: 1.4;">{{ ev.statusTitle }}</span>
+          <span style="font-size: 12.5px; line-height: 1.5; color: oklch(0.68 0.008 265); text-wrap: pretty;">{{ ev.statusBody }}</span>
+          <sc-if value="{{ ev.hasOptions }}">
+            <div style="display: flex; flex-direction: column; gap: 7px; margin-top: 2px;">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.06em; text-transform: uppercase; color: oklch(0.56 0.01 265);">{{ ev.optionsLabel }}</span>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                <sc-for list="{{ ev.options }}" as="o" hint-placeholder-count="5">
+                  <button type="button" onClick="{{ o.onClick }}" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: oklch(0.88 0.04 220); background: oklch(0.25 0.015 240); border: 1px solid oklch(0.34 0.02 235); border-radius: 7px; padding: 5px 10px; cursor: pointer; text-align: left; line-height: 1.35;" style-hover="background: oklch(0.31 0.03 235);">{{ o.label }}</button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+    </div>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:800},&quot;showToolCalls&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Chat&quot;},&quot;showFollowUps&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Chat&quot;}}">
+const NEG = "oklch(0.66 0.17 28)";
+const POS = "oklch(0.72 0.14 155)";
+const NEU = "oklch(0.62 0.01 265)";
+const CYAN = "oklch(0.75 0.12 200)";
+const LINE = ["oklch(0.75 0.12 200)", "oklch(0.68 0.15 285)", "oklch(0.76 0.13 90)", "oklch(0.72 0.14 155)", "oklch(0.7 0.15 20)"];
+
+const BRANDS = ["Audi", "BMW", "INFINITI", "Lexus", "Mercedes-Benz"];
+
+const TOPICS = [
+  "high mileage & maintenance reliability", "ride comfort & suspension smoothness",
+  "electric vehicle range & charging infrastructure", "fuel economy & real-world mpg",
+  "transmission shifting behaviour", "infotainment responsiveness & software updates",
+  "brake feel & rotor wear", "cabin wind & road noise", "seat support on long drives",
+  "dealer service experience & cost", "cold-start behaviour & winter performance",
+  "turbo lag & throttle response", "paint & trim durability", "cargo space & rear seat room",
+  "steering weight & road feel (S-class)", "oil consumption between services",
+  "air suspension failures (Q7)", "battery drain when parked", "run-flat tyre comfort",
+  "adaptive cruise & lane-keep accuracy", "Not analyzed (review too short)"
+];
+
+const STATS = {
+  "Audi": { review_count: 4218, avg_rating: 4.21, median_rating: 4.0, rating_std: 0.94, avg_car_year: 2011.4 },
+  "BMW": { review_count: 5104, avg_rating: 4.13, median_rating: 4.0, rating_std: 1.02, avg_car_year: 2010.8 },
+  "INFINITI": { review_count: 1642, avg_rating: 4.35, median_rating: 5.0, rating_std: 0.88, avg_car_year: 2009.6 },
+  "Lexus": { review_count: 3877, avg_rating: 4.58, median_rating: 5.0, rating_std: 0.71, avg_car_year: 2010.2 },
+  "Mercedes-Benz": { review_count: 4690, avg_rating: 4.24, median_rating: 4.0, rating_std: 0.97, avg_car_year: 2011.1 }
+};
+
+const T = (label, count, kw) => ({ topic_label: label, count: count, top_keywords: kw });
+
+const NEGATIVE = {
+  "Audi": [
+    T("fuel economy & real-world mpg", 312, "mpg, thirsty, premium fuel, highway"),
+    T("high mileage & maintenance reliability", 287, "80k, timing chain, carbon buildup, costly"),
+    T("oil consumption between services", 241, "quart, burns oil, dipstick, 2.0T"),
+    T("air suspension failures (Q7)", 163, "compressor, sagging, airbag, $2400"),
+    T("dealer service experience & cost", 148, "loaner, quoted, markup, waiting"),
+    T("infotainment responsiveness & software updates", 121, "MMI, freeze, reboot, lag")
+  ],
+  "BMW": [
+    T("high mileage & maintenance reliability", 398, "100k, cooling system, gaskets, expensive"),
+    T("run-flat tyre comfort", 274, "harsh, potholes, replacement, no spare"),
+    T("fuel economy & real-world mpg", 233, "premium, city mpg, short trips"),
+    T("brake feel & rotor wear", 198, "dust, squeal, rotors at 30k"),
+    T("battery drain when parked", 142, "two weeks, jump start, parasitic"),
+    T("infotainment responsiveness & software updates", 119, "iDrive, pairing, update")
+  ],
+  "INFINITI": [
+    T("fuel economy & real-world mpg", 188, "V6, 18 mpg, thirsty"),
+    T("infotainment responsiveness & software updates", 154, "dated, dual screen, nav maps"),
+    T("high mileage & maintenance reliability", 131, "CVT, 90k, coolant"),
+    T("cabin wind & road noise", 96, "highway, tyre roar, seals"),
+    T("dealer service experience & cost", 71, "few dealers, distance")
+  ],
+  "Lexus": [
+    T("infotainment responsiveness & software updates", 176, "touchpad, clumsy, CarPlay missing"),
+    T("fuel economy & real-world mpg", 118, "V8, city, hybrid better"),
+    T("cargo space & rear seat room", 94, "boot, hybrid battery, narrow"),
+    T("high mileage & maintenance reliability", 73, "150k, still fine, water pump"),
+    T("brake feel & rotor wear", 58, "regen blend, soft pedal")
+  ],
+  "Mercedes-Benz": [
+    T("high mileage & maintenance reliability", 341, "airmatic, 90k, electronics, costly"),
+    T("dealer service experience & cost", 266, "service A, $700, labour rate"),
+    T("fuel economy & real-world mpg", 219, "premium, 19 mpg, AMG"),
+    T("battery drain when parked", 157, "aux battery, warning, dealer"),
+    T("infotainment responsiveness & software updates", 131, "COMAND, dated, voice"),
+    T("steering weight & road feel (S-class)", 88, "light, isolated, numb")
+  ]
+};
+
+const POSITIVE = {
+  "Audi": [
+    T("ride comfort & suspension smoothness", 341, "composed, quattro, motorway"),
+    T("infotainment responsiveness & software updates", 288, "virtual cockpit, crisp, maps"),
+    T("seat support on long drives", 214, "bolsters, 500 miles, no fatigue"),
+    T("fuel economy & real-world mpg", 132, "TDI, 42 mpg, cruising")
+  ],
+  "BMW": [
+    T("steering weight & road feel (S-class)", 402, "precise, weighted, confidence"),
+    T("ride comfort & suspension smoothness", 268, "adaptive, comfort mode"),
+    T("transmission shifting behaviour", 231, "ZF8, seamless, quick"),
+    T("fuel economy & real-world mpg", 147, "diesel, 45 mpg, long legs")
+  ],
+  "INFINITI": [
+    T("seat support on long drives", 196, "soft leather, comfortable, road trip"),
+    T("ride comfort & suspension smoothness", 164, "cushy, quiet, floats"),
+    T("high mileage & maintenance reliability", 138, "200k, VQ engine, bulletproof")
+  ],
+  "Lexus": [
+    T("high mileage & maintenance reliability", 512, "250k, nothing broke, bulletproof"),
+    T("cabin wind & road noise", 388, "silent, library, isolated"),
+    T("ride comfort & suspension smoothness", 341, "plush, absorbs, smooth"),
+    T("seat support on long drives", 246, "supportive, ventilated, all day"),
+    T("dealer service experience & cost", 184, "loaner, coffee, no pressure")
+  ],
+  "Mercedes-Benz": [
+    T("ride comfort & suspension smoothness", 396, "airmatic, magic carpet, motorway"),
+    T("seat support on long drives", 287, "massage, multicontour, fatigue-free"),
+    T("cabin wind & road noise", 221, "hushed, double glazing"),
+    T("transmission shifting behaviour", 158, "9G, imperceptible")
+  ]
+};
+
+const REVIEW_TEXT = [
+  "Bought it at 60k miles and the mileage figures never matched the sticker — I average 21 mpg mixed, maybe 27 on a long motorway run with cruise set at 70.",
+  "Three years in and the only spend has been tyres and oil. It simply does not break, which after two German cars is a novelty.",
+  "The ride is the reason I keep it. Broken city streets disappear. The trade-off is a boot that swallows less than the numbers suggest.",
+  "Dealer quoted $2,400 for the air suspension compressor at 78k. Independent shop did it for $1,100 and it has been fine since.",
+  "Steering is the highlight — weighted, accurate, tells you what the front tyres are doing. Infotainment is a generation behind.",
+  "Highway noise at 80 is higher than I expected for the class; the seals around the rear doors seem to be the culprit."
+];
+
+const YEARS = Array.from({ length: 22 }, (_, i) => 1997 + i);
+
+function trendFor(brand) {
+  const base = STATS[brand].avg_rating;
+  const seed = brand.length * 7 + brand.charCodeAt(0);
+  return YEARS.map((y, i) => {
+    const wob = Math.sin((i + seed) * 0.7) * 0.13 + Math.cos((i + seed) * 0.31) * 0.09;
+    const drift = (i - YEARS.length / 2) * 0.012;
+    const r = Math.max(3.2, Math.min(5, base + wob + drift - 0.18));
+    const n = Math.round(STATS[brand].review_count / YEARS.length * (0.5 + i / YEARS.length));
+    return { brand_name: brand, car_year: y, avg_rating: Math.round(r * 100) / 100, review_count: n };
+  });
+}
+const TRENDS = {};
+BRANDS.forEach(b => { TRENDS[b] = trendFor(b); });
+
+const ASPECTS = [
+  { k: /mileage|mpg|fuel|economy|gas|consumption/, topic: "fuel economy & real-world mpg", word: "mileage" },
+  { k: /reliab|maintenance|breakdown|repair/, topic: "high mileage & maintenance reliability", word: "reliability" },
+  { k: /comfort|ride|suspension/, topic: "ride comfort & suspension smoothness", word: "ride comfort" },
+  { k: /noise|quiet|loud/, topic: "cabin wind & road noise", word: "cabin noise" },
+  { k: /infotain|screen|software|tech|nav/, topic: "infotainment responsiveness & software updates", word: "infotainment" },
+  { k: /seat/, topic: "seat support on long drives", word: "seats" },
+  { k: /brake/, topic: "brake feel & rotor wear", word: "brakes" },
+  { k: /dealer|service/, topic: "dealer service experience & cost", word: "dealer service" },
+  { k: /charg|electric|ev range/, topic: "electric vehicle range & charging infrastructure", word: "EV charging" }
+];
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.chatRef = React.createRef();
+    this.inputRef = React.createRef();
+    const intro = {
+      id: 1, isBot: true,
+      calls: [{ label: "session_start", dot: NEU }],
+      answer: "Connected to the owner-review corpus: 19,531 reviews across Audi, BMW, INFINITI, Lexus and Mercedes-Benz, model years 1997–2018, tagged against 40 topics.",
+      note: "Ask for brand stats, complaints or praises on a topic, a rating trend, or a free-text search of review bodies. Whatever the tools return gets drawn on the right.",
+      chips: [
+        "What do people complain about with Audi's mileage?",
+        "Compare BMW and Lexus on mileage",
+        "Rating trend for Lexus and Mercedes-Benz",
+        "Search reviews mentioning air suspension",
+        "Stats for Porsche"
+      ]
+    };
+    this.state = {
+      messages: [intro],
+      thinking: false,
+      pinned: null,
+      result: { tool: "corpus.describe", status: "ok", kind: "stats", brands: BRANDS, title: "All five brands" }
+    };
+  }
+
+  componentDidUpdate() {
+    const el = this.chatRef.current;
+    if (!el) return;
+    const target = el.scrollHeight;
+    if (this._lastScroll === target) return;
+    this._lastScroll = target;
+    el.scrollTop = target;
+  }
+
+  askFn(text) {
+    this._askCache = this._askCache || {};
+    if (!this._askCache[text]) this._askCache[text] = () => this.ask(text);
+    return this._askCache[text];
+  }
+
+  pinFn(m) {
+    this._pinCache = this._pinCache || {};
+    if (!this._pinCache[m.id]) this._pinCache[m.id] = () => this.setState({ pinned: m.result });
+    return this._pinCache[m.id];
+  }
+
+  ask(text) {
+    const q = String(text || "").trim();
+    if (!q) return;
+    this.setState(s => ({ messages: s.messages.concat([{ id: Date.now(), isUser: true, text: q }]), thinking: true }));
+    setTimeout(() => {
+      const r = this.route(q);
+      const id = Date.now() + 1;
+      this.setState(s => ({
+        messages: s.messages.concat([Object.assign({ id: id, isBot: true }, r.msg, { result: r.result })]),
+        thinking: false, pinned: null, result: r.result
+      }));
+    }, 480);
+  }
+
+  brandsIn(t) {
+    const map = { audi: "Audi", bmw: "BMW", infiniti: "INFINITI", lexus: "Lexus", "mercedes": "Mercedes-Benz", "benz": "Mercedes-Benz", "merc": "Mercedes-Benz" };
+    const out = [];
+    Object.keys(map).forEach(k => { if (t.indexOf(k) >= 0 && out.indexOf(map[k]) < 0) out.push(map[k]); });
+    return out;
+  }
+
+  unknownBrand(t) {
+    const m = t.match(/\b(porsche|tesla|volvo|jaguar|acura|genesis|cadillac|kia|toyota|honda|ford)\b/);
+    return m ? m[0].charAt(0).toUpperCase() + m[0].slice(1) : null;
+  }
+
+  route(q) {
+    const t = q.toLowerCase();
+    const unknown = this.unknownBrand(t);
+    if (unknown) {
+      return {
+        msg: {
+          calls: [{ label: "get_brand_stats(brand=\"" + unknown + "\") → brand_not_found", dot: NEG }],
+          answer: unknown + " is not in this corpus, so I have nothing to report on it.",
+          note: "The dataset covers five luxury marques. Pick one on the right and I will rerun the same question against it.",
+          chips: ["Stats for Lexus", "Compare Audi and BMW"]
+        },
+        result: { tool: "get_brand_stats", status: "brand_not_found", kind: "status", query: unknown }
+      };
+    }
+
+    const brands = this.brandsIn(t);
+    const aspect = ASPECTS.find(a => a.k.test(t));
+
+    if (/search|mention|find reviews|review text|quote/.test(t)) return this.searchResult(q, t, brands);
+    if (/trend|by year|over time|model year|per year/.test(t)) return this.trendResult(brands);
+    if (/complain|complaint|problem|issue|negative|worst|wrong/.test(t) || (aspect && !/prais|like|love|best|positive/.test(t) && brands.length === 1)) {
+      return this.topicResult(brands.length ? brands : ["Audi"], "negative", aspect, t);
+    }
+    if (/prais|like|love|best|positive|happy|strength/.test(t)) {
+      return this.topicResult(brands.length ? brands : ["Lexus"], "positive", aspect, t);
+    }
+    if (aspect && brands.length > 1) return this.topicResult(brands, "negative", aspect, t);
+    return this.statsResult(brands.length ? brands : BRANDS);
+  }
+
+  statsResult(brands) {
+    if (brands.length === 1) {
+      const b = brands[0], s = STATS[b];
+      return {
+        msg: {
+          calls: [{ label: "get_brand_stats(brand=\"" + b + "\")", dot: CYAN }],
+          answer: b + " averages " + s.avg_rating.toFixed(2) + "/5 across " + s.review_count.toLocaleString() + " reviews, median " + s.median_rating.toFixed(1) + ", spread ±" + s.rating_std.toFixed(2) + ".",
+          note: "Average model year in the sample is " + s.avg_car_year.toFixed(1) + ", so the picture leans toward early-2010s cars.",
+          chips: ["What do people complain about with " + b + "?", "What do " + b + " owners praise?", "Rating trend for " + b]
+        },
+        result: { tool: "get_brand_stats", status: "ok", kind: "stats", brands: [b], title: b }
+      };
+    }
+    const sorted = brands.slice().sort((a, b) => STATS[b].avg_rating - STATS[a].avg_rating);
+    return {
+      msg: {
+        calls: [{ label: "get_brand_stats(brands=[" + brands.length + "])", dot: CYAN }],
+        answer: sorted[0] + " leads on average rating at " + STATS[sorted[0]].avg_rating.toFixed(2) + "/5; " + sorted[sorted.length - 1] + " sits lowest at " + STATS[sorted[sorted.length - 1]].avg_rating.toFixed(2) + ".",
+        note: "Sample sizes differ by up to " + (Math.max.apply(null, brands.map(b => STATS[b].review_count)) - Math.min.apply(null, brands.map(b => STATS[b].review_count))).toLocaleString() + " reviews, shown as bar opacity.",
+        chips: ["Rating trend for " + sorted[0] + " and " + sorted[sorted.length - 1], "Compare them on mileage", "What do " + sorted[0] + " owners praise?"]
+      },
+      result: { tool: "get_brand_stats", status: "ok", kind: "stats", brands: sorted, title: brands.length === 5 ? "All five brands" : sorted.join(" · ") }
+    };
+  }
+
+  topicResult(brands, sentiment, aspect, t) {
+    const src = sentiment === "negative" ? NEGATIVE : POSITIVE;
+    const groups = brands.map(b => {
+      let items = src[b].slice();
+      if (aspect) items = items.filter(x => x.topic_label === aspect.topic);
+      return { brand_name: b, sentiment: sentiment, topic_filter: aspect ? aspect.topic : null, items: items };
+    });
+    const empty = groups.filter(g => g.items.length === 0);
+    if (aspect && empty.length === groups.length) {
+      return {
+        msg: {
+          calls: [{ label: "get_topics(brand=\"" + brands[0] + "\", topic=\"" + aspect.word + "\") → topic_not_found", dot: NEG }],
+          answer: "No " + sentiment + " reviews for " + brands[0] + " were tagged to “" + aspect.topic + "”.",
+          note: "The topic exists in the taxonomy but has zero matching reviews for this brand and sentiment. Here are the topics that do have volume.",
+          chips: ["What do people complain about with " + brands[0] + "?"]
+        },
+        result: { tool: "get_topics", status: "topic_not_found", kind: "status", query: aspect.topic, brand: brands[0], sentiment: sentiment, options: src[brands[0]].map(x => x.topic_label) }
+      };
+    }
+
+    const flat = groups.filter(g => g.items.length);
+    const lead = flat[0].items[0];
+    let answer, note;
+    if (aspect && flat.length > 1) {
+      const sortedG = flat.slice().sort((a, b) => b.items[0].count - a.items[0].count);
+      answer = "On " + aspect.word + ", " + sortedG[0].brand_name + " draws the most " + sentiment + " mentions (" + sortedG[0].items[0].count + ") versus " + sortedG[sortedG.length - 1].brand_name + " at " + sortedG[sortedG.length - 1].items[0].count + ".";
+      note = "Counts are raw mention volumes, so the larger corpora are favoured — " + sortedG[0].brand_name + " has " + STATS[sortedG[0].brand_name].review_count.toLocaleString() + " reviews total.";
+    } else if (aspect) {
+      answer = flat[0].brand_name + " owners raise " + aspect.word + " in " + lead.count + " " + sentiment + " reviews, tagged to “" + lead.topic_label + "”.";
+      note = "Most frequent keywords in that cluster: " + lead.top_keywords + ".";
+    } else {
+      answer = "Top " + sentiment + " topic for " + flat[0].brand_name + ": “" + lead.topic_label + "” with " + lead.count + " reviews.";
+      note = flat[0].items[1] ? "Then “" + flat[0].items[1].topic_label + "” (" + flat[0].items[1].count + ") and “" + flat[0].items[2].topic_label + "” (" + flat[0].items[2].count + ")." : "";
+    }
+    const other = sentiment === "negative" ? "praise" : "complain about";
+    return {
+      msg: {
+        calls: flat.map(g => ({ label: "get_topics(brand=\"" + g.brand_name + "\", sentiment=\"" + sentiment + "\"" + (aspect ? ", topic=\"" + aspect.word + "\"" : "") + ")", dot: sentiment === "negative" ? NEG : POS })),
+        answer: answer, note: note,
+        chips: ["What do " + flat[0].brand_name + " owners " + other + "?", "Rating trend for " + flat[0].brand_name, "Search reviews mentioning " + (aspect ? aspect.word : "reliability")]
+      },
+      result: {
+        tool: "get_topics", status: "ok", kind: "topics", groups: groups, sentiment: sentiment, aspect: aspect ? aspect.topic : null,
+        title: (aspect ? aspect.word + " · " : "") + flat.map(g => g.brand_name).join(" vs ")
+      }
+    };
+  }
+
+  trendResult(brands) {
+    const list = brands.length ? brands : BRANDS;
+    const ends = list.map(b => ({ b: b, v: TRENDS[b][TRENDS[b].length - 1].avg_rating }));
+    ends.sort((a, b) => b.v - a.v);
+    return {
+      msg: {
+        calls: list.map(b => ({ label: "get_rating_trend(brand=\"" + b + "\", 1997-2018)", dot: CYAN })),
+        answer: "For 2018 cars, " + ends[0].b + " sits highest at " + ends[0].v.toFixed(2) + "/5" + (ends.length > 1 ? ", with " + ends[ends.length - 1].b + " at " + ends[ends.length - 1].v.toFixed(2) : "") + ".",
+        note: "Early years rest on far fewer reviews than late ones — pre-2003 model years average under 100 reviews each.",
+        chips: ["Stats for " + ends[0].b, "What do " + ends[0].b + " owners praise?", "Compare all five brands"]
+      },
+      result: { tool: "get_rating_trend", status: "ok", kind: "trend", brands: list, title: list.length === 5 ? "All five brands · 1997–2018" : list.join(" vs ") + " · 1997–2018" }
+    };
+  }
+
+  searchResult(q, t, brands) {
+    const m = q.match(/mentioning\s+(.+)$/i) || q.match(/search(?:\s+reviews)?\s+(?:for\s+)?(.+)$/i);
+    const term = m ? m[1].replace(/[?.]$/, "").trim() : q;
+    if (/unicorn|hovercraft|zzz/.test(t)) {
+      return {
+        msg: {
+          calls: [{ label: "search_reviews(query=\"" + term + "\") → no_results", dot: NEG }],
+          answer: "No review bodies contain “" + term + "”.",
+          note: "Full-text search runs over 19,531 reviews with no stemming, so a narrower phrase can miss.",
+          chips: ["Search reviews mentioning air suspension"]
+        },
+        result: { tool: "search_reviews", status: "no_results", kind: "status", query: term }
+      };
+    }
+    const pool = brands.length ? brands : BRANDS;
+    const matches = REVIEW_TEXT.map((txt, i) => {
+      const b = pool[i % pool.length];
+      const yr = 2004 + (i * 3) % 14;
+      return {
+        review_id: "r" + (48210 + i * 137), brand_name: b, car_year: yr,
+        date: (2015 + (i % 4)) + "-0" + (1 + i % 8) + "-1" + (i % 9),
+        rating: [2, 5, 4, 2, 4, 3][i], review_text: txt, word_count: txt.split(" ").length
+      };
+    });
+    return {
+      msg: {
+        calls: [{ label: "search_reviews(query=\"" + term + "\"" + (brands.length ? ", brand=\"" + brands[0] + "\"" : "") + ")", dot: CYAN }],
+        answer: matches.length + " reviews mention “" + term + "”, spanning " + pool.length + " brand" + (pool.length > 1 ? "s" : "") + " and model years " + Math.min.apply(null, matches.map(x => x.car_year)) + "–" + Math.max.apply(null, matches.map(x => x.car_year)) + ".",
+        note: "Ratings on the matches skew low (mean " + (matches.reduce((a, x) => a + x.rating, 0) / matches.length).toFixed(1) + "/5), which is typical of a term people write about when something went wrong.",
+        chips: ["What do people complain about with " + pool[0] + "?", "Rating trend for " + pool[0]]
+      },
+      result: { tool: "search_reviews", status: "ok", kind: "reviews", query: term, matches: matches, title: "“" + term + "” · " + matches.length + " matches" }
+    };
+  }
+
+  buildEvidence(res) {
+    if (this._evCache && this._evCache.src === res) return this._evCache.val;
+    const out = this.computeEvidence(res);
+    this._evCache = { src: res, val: out };
+    return out;
+  }
+
+  computeEvidence(res) {
+    const ev = {
+      tool: res.tool, title: res.title || res.query || "—", status: res.status,
+      statusColor: res.status === "ok" ? POS : "oklch(0.78 0.13 75)",
+      statusBorder: res.status === "ok" ? "oklch(0.38 0.06 155)" : "oklch(0.45 0.09 75)",
+      showTiles: false, showBrands: false, showTopics: false, showTrend: false, showReviews: false, showStatus: false,
+      tiles: [], brandBars: [], topicGroups: [], trendLines: [], trendLegend: [], trendGrid: [], trendTicks: [], reviews: [], options: [], hasOptions: false
+    };
+
+    if (res.kind === "status") {
+      ev.showStatus = true;
+      if (res.status === "brand_not_found") {
+        ev.statusTitle = "“" + res.query + "” is not a covered brand";
+        ev.statusBody = "get_brand_stats returned brand_not_found. The corpus is fixed to five marques; pick one to rerun the query.";
+        ev.optionsLabel = "available_brands";
+        ev.options = BRANDS.map(b => ({ label: b, onClick: this.askFn("Stats for " + b) }));
+      } else if (res.status === "topic_not_found") {
+        ev.statusTitle = "No reviews tagged to that topic";
+        ev.statusBody = "“" + res.query + "” is a valid topic but has zero " + res.sentiment + " reviews for " + res.brand + ".";
+        ev.optionsLabel = "available_topics for " + res.brand;
+        ev.options = (res.options || []).map(o => ({ label: o, onClick: this.askFn(res.sentiment === "negative" ? "complaints about " + res.brand + " " + o : res.brand + " praise " + o) }));
+      } else {
+        ev.statusTitle = "No matching reviews";
+        ev.statusBody = "search_reviews returned no_results for “" + res.query + "”. Try a shorter phrase or drop the brand filter.";
+        ev.optionsLabel = "try instead";
+        ev.options = ["air suspension", "timing chain", "run-flat", "CarPlay"].map(o => ({ label: o, onClick: this.askFn("Search reviews mentioning " + o) }));
+      }
+      ev.hasOptions = ev.options.length > 0;
+      return ev;
+    }
+
+    if (res.kind === "stats") {
+      if (res.brands.length === 1) {
+        const b = res.brands[0], s = STATS[b];
+        ev.showTiles = true;
+        ev.tiles = [
+          { label: "avg_rating", value: s.avg_rating.toFixed(2), sub: "of 5.00", color: CYAN },
+          { label: "median_rating", value: s.median_rating.toFixed(1), sub: "of 5.0", color: "oklch(0.92 0.006 265)" },
+          { label: "rating_std", value: "±" + s.rating_std.toFixed(2), sub: s.rating_std < 0.85 ? "tight spread" : "wide spread", color: "oklch(0.92 0.006 265)" },
+          { label: "review_count", value: s.review_count.toLocaleString(), sub: "reviews in corpus", color: "oklch(0.92 0.006 265)" },
+          { label: "avg_car_year", value: s.avg_car_year.toFixed(1), sub: "model year mean", color: "oklch(0.92 0.006 265)" },
+          { label: "brand", value: b === "Mercedes-Benz" ? "M-B" : b, sub: "1997–2018", color: "oklch(0.92 0.006 265)" }
+        ];
+      } else {
+        ev.showBrands = true;
+        const maxN = Math.max.apply(null, res.brands.map(b => STATS[b].review_count));
+        ev.brandBars = res.brands.map((b, i) => {
+          const s = STATS[b];
+          return {
+            name: b, rating: s.avg_rating.toFixed(2), count: s.review_count.toLocaleString() + " rev",
+            width: (s.avg_rating / 5 * 100).toFixed(1) + "%", color: LINE[BRANDS.indexOf(b) % 5],
+            opacity: (0.45 + 0.55 * (s.review_count / maxN)).toFixed(2)
+          };
+        });
+        ev.brandFootnote = "n = " + res.brands.reduce((a, b) => a + STATS[b].review_count, 0).toLocaleString() + " reviews · avg model year " + (res.brands.reduce((a, b) => a + STATS[b].avg_car_year, 0) / res.brands.length).toFixed(1);
+      }
+      return ev;
+    }
+
+    if (res.kind === "topics") {
+      ev.showTopics = true;
+      const color = res.sentiment === "negative" ? NEG : POS;
+      ev.topicGroups = res.groups.filter(g => g.items.length).map(g => {
+        const max = Math.max.apply(null, g.items.map(x => x.count));
+        return {
+          title: g.brand_name + " · " + (res.sentiment === "negative" ? "complaints" : "praises"),
+          meta: g.topic_filter ? "topic_filter set" : g.items.length + " topics",
+          color: color, border: res.sentiment === "negative" ? "oklch(0.36 0.07 28)" : "oklch(0.34 0.06 155)",
+          rows: g.items.map(x => ({
+            label: x.topic_label, count: x.count.toLocaleString(),
+            width: (x.count / max * 100).toFixed(1) + "%",
+            kw: x.top_keywords, tip: x.topic_label + " — " + x.top_keywords
+          }))
+        };
+      });
+      return ev;
+    }
+
+    if (res.kind === "trend") {
+      ev.showTrend = true;
+      const x0 = 30, x1 = 432, yTop = 14, yBot = 158, lo = 3.4, hi = 5;
+      const px = y => x0 + (y - 1997) / 21 * (x1 - x0);
+      const py = v => yBot - (v - lo) / (hi - lo) * (yBot - yTop);
+      ev.trendGrid = [3.5, 4, 4.5, 5].map(v => ({ y: py(v).toFixed(1), ty: (py(v) + 3).toFixed(1), label: v.toFixed(1) }));
+      ev.trendTicks = [1997, 2002, 2007, 2012, 2018].map(y => ({ x: px(y).toFixed(1), label: y }));
+      ev.trendLines = res.brands.map(b => ({
+        color: LINE[BRANDS.indexOf(b) % 5],
+        points: TRENDS[b].map(p => px(p.car_year).toFixed(1) + "," + py(p.avg_rating).toFixed(1)).join(" ")
+      }));
+      ev.trendLegend = res.brands.map(b => ({ label: b, color: LINE[BRANDS.indexOf(b) % 5] }));
+      ev.trendFootnote = "22 model years · " + res.brands.reduce((a, b) => a + STATS[b].review_count, 0).toLocaleString() + " reviews · points with fewer than 40 reviews are still plotted";
+      return ev;
+    }
+
+    if (res.kind === "reviews") {
+      ev.showReviews = true;
+      ev.reviewMeta = res.matches.length + " matches · sorted by relevance · query “" + res.query + "”";
+      ev.reviews = res.matches.map(m => ({
+        badge: m.brand_name + " " + m.car_year,
+        stars: "★★★★★".slice(0, m.rating) + "☆☆☆☆☆".slice(0, 5 - m.rating),
+        starColor: m.rating >= 4 ? POS : m.rating <= 2 ? NEG : "oklch(0.78 0.11 85)",
+        date: m.date, text: m.review_text,
+        meta: m.review_id + " · " + m.word_count + " words"
+      }));
+      return ev;
+    }
+    return ev;
+  }
+
+  renderVals() {
+    const showCalls = this.props.showToolCalls !== false;
+    const showChips = this.props.showFollowUps !== false;
+    const active = this.state.pinned || this.state.result;
+
+    const messages = this.state.messages.map(m => {
+      const isPinned = this.state.pinned && m.result === this.state.pinned;
+      return Object.assign({}, m, {
+        calls: showCalls ? (m.calls || []) : [],
+        hasEvidence: !!m.result,
+        pinLabel: isPinned ? "showing this turn's evidence" : "show this turn's evidence",
+        pinColor: isPinned ? CYAN : "oklch(0.6 0.01 265)",
+        pinBorder: isPinned ? "oklch(0.5 0.08 200)" : "oklch(0.32 0.01 265)",
+        onPin: this.pinFn(m),
+        hasChips: showChips && !!(m.chips && m.chips.length),
+        chips: (m.chips || []).map(c => ({ label: c, onClick: this.askFn(c) }))
+      });
+    });
+
+    return {
+      messages, thinking: this.state.thinking,
+      chatRef: this.chatRef, inputRef: this.inputRef,
+      corpusLabel: "19,531 reviews · 1997–2018 · 40 topics",
+      onSubmit: e => {
+        e.preventDefault();
+        const el = this.inputRef.current;
+        if (!el) return;
+        const v = el.value; el.value = ""; this.ask(v);
+      },
+      ev: this.buildEvidence(active)
+    };
+  }
+}
+</script>
+</body>
+</html>
