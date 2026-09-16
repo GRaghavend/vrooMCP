@@ -12,11 +12,12 @@ LLM **composing multiple tool calls**, not by a dedicated tool — see
 "Design notes" below.
 
 **Status**: the MCP server and the Ollama chat loop are both working
-end-to-end (see `scripts/manual_test.py`). The UI design is finalized
-(`frontend/design-export/`) but not yet wired to real data — see
-[`frontend/README.md`](frontend/README.md) for exactly what's done and
-what's left. Everything below runs from the command line until the
-frontend is a real, runnable app.
+end-to-end (see `scripts/manual_test.py`), and a FastAPI layer
+(`backend/`) now exposes that chat loop over HTTP for a frontend to call.
+The UI design is finalized (`frontend/design-export/`) but not yet wired
+to real data — see [`frontend/README.md`](frontend/README.md) for exactly
+what's done and what's left. Everything below runs from the command line
+until the frontend is a real, runnable app.
 
 ## Repository layout
 
@@ -34,7 +35,8 @@ data/
   processed/                 Final tables the MCP server reads
   README.md                  What lives in each of the 3 layers above, and who produces/consumes it
 mcp_server/                4. The MCP server, its tools, and the Ollama client
-frontend/                  5. The chat + evidence-panel UI (design finalized, not yet wired up)
+backend/                   5. FastAPI layer exposing the chat loop over HTTP
+frontend/                  6. The chat + evidence-panel UI (design finalized, not yet wired up)
 scripts/                   Throwaway manual-run scripts (not shipped code)
 logs/                       Structured JSON logs (git-ignored, created at runtime)
 ```
@@ -172,6 +174,23 @@ Edit the `QUERY` constant at the top of `scripts/manual_test.py` to try
 different questions (single-tool, compound/multi-tool, unknown-brand). It
 prints the model's answer, every tool call made (name, args, status,
 duration), and the client-side structured log lines for that exact run.
+
+## 5. Backend API — `backend/`
+
+A thin FastAPI layer in front of `mcp_server/client.py`, so the frontend
+(a separate app, different origin during local dev) can drive the chat
+loop over HTTP instead of importing Python directly. It owns the one
+long-lived `MCPToolClient` (started once at API startup, not per request)
+and an in-memory `conversation_id -> history` store, since `run_chat()`
+itself holds neither. See [`backend/README.md`](backend/README.md) for the
+route list and its known v1 shortcuts (in-memory history with no
+eviction, permissive local-dev CORS).
+
+```bash
+source .venv_mcp/bin/activate
+pip install -r requirements.txt
+uvicorn backend.main:app --reload
+```
 
 ## Tool → data file map
 

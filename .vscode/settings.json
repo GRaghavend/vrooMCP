@@ -1,0 +1,4 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv_mcp/bin/python",
+  "python.analysis.extraPaths": ["${workspaceFolder}/mcp_server"]
+}
