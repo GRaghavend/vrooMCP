@@ -11,13 +11,12 @@ comparison-by-aspect ("compare Audi and BMW on mileage") is achieved by the
 LLM **composing multiple tool calls**, not by a dedicated tool — see
 "Design notes" below.
 
-**Status**: the MCP server and the Ollama chat loop are both working
-end-to-end (see `scripts/manual_test.py`), and a FastAPI layer
-(`backend/`) now exposes that chat loop over HTTP for a frontend to call.
-The UI design is finalized (`frontend/design-export/`) but not yet wired
-to real data — see [`frontend/README.md`](frontend/README.md) for exactly
-what's done and what's left. Everything below runs from the command line
-until the frontend is a real, runnable app.
+**Status**: the MCP server, the Ollama chat loop, the FastAPI layer
+(`backend/`), and a real React + TypeScript frontend (`frontend/`) are
+all working end-to-end. See [`frontend/README.md`](frontend/README.md)
+for what the app does and how it maps to the tool contracts below, and
+[`steps_to_run.md`](steps_to_run.md) for the exact commands to bring up
+the backend and frontend together locally.
 
 ## Repository layout
 
@@ -36,7 +35,7 @@ data/
   README.md                  What lives in each of the 3 layers above, and who produces/consumes it
 mcp_server/                4. The MCP server, its tools, and the Ollama client
 backend/                   5. FastAPI layer exposing the chat loop over HTTP
-frontend/                  6. The chat + evidence-panel UI (design finalized, not yet wired up)
+frontend/                  6. The chat + evidence-panel UI (React + TypeScript + Vite)
 scripts/                   Throwaway manual-run scripts (not shipped code)
 logs/                       Structured JSON logs (git-ignored, created at runtime)
 ```
@@ -292,9 +291,8 @@ source .venv_mcp/bin/activate
 python scripts/manual_test.py
 ```
 
-## What's left
+## Running the whole thing (backend + frontend)
 
-The MCP server and the Ollama-driven chat loop are both fully working
-end-to-end today (`scripts/manual_test.py` exercises the real thing). The
-only remaining piece is a UI on top of `mcp_server/client.py`'s chat loop
-— that's the next thing to build, not yet started.
+See [`steps_to_run.md`](steps_to_run.md) for the exact commands, in
+order, to bring up Ollama, the FastAPI backend, and the frontend dev
+server together.

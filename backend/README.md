@@ -1,7 +1,8 @@
 # backend
 
-The HTTP layer between the frontend (a separate React app, different
-origin during local dev) and `mcp_server/client.py`'s chat loop.
+The HTTP layer between the frontend (`../frontend`, a React + TypeScript
++ Vite app running on a separate origin during local dev) and
+`mcp_server/client.py`'s chat loop.
 
 `mcp_server/client.py` provides the chat logic (`run_chat()`) but
 deliberately no HTTP server, no process lifecycle, and no conversation
@@ -44,6 +45,9 @@ app (`main.py`) that:
   (`localhost:5173`/`localhost:3000`); tighten before any real deployment.
 
 ## Running
+
+See [`../steps_to_run.md`](../steps_to_run.md) for the full sequence
+including Ollama and the frontend dev server. Backend-only:
 
 ```bash
 source .venv_mcp/bin/activate
