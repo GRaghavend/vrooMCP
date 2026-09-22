@@ -1,0 +1,283 @@
+.home {
+  --black: #050506;
+  --ink: #f4f1ea;
+  --gold: #d9b98b;
+  --gold-line: rgba(217, 185, 139, 0.55);
+  --red: #b3161f;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow: hidden;
+  background: var(--black);
+  color: var(--ink);
+  font-family: "Inter", Helvetica, sans-serif;
+  padding: clamp(24px, 4.4vh, 48px) clamp(24px, 4.5vw, 72px);
+}
+
+/* ---------- Header ---------- */
+.home__header {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 1.6vw, 26px);
+  animation: fade-in 1.2s var(--ease) 0.2s both;
+}
+.wordmark {
+  font-family: "Bodoni Moda", "Didot", serif;
+  font-weight: 500;
+  font-size: clamp(26px, 2.5vw, 38px);
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+.wordmark__accent {
+  color: var(--gold);
+}
+.home__divider {
+  width: 1px;
+  height: clamp(28px, 3.4vh, 38px);
+  background: rgba(244, 241, 234, 0.28);
+}
+.home__tagline {
+  margin: 0;
+  font-size: clamp(9.5px, 0.8vw, 12px);
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(244, 241, 234, 0.72);
+}
+
+/* ---------- Heading + query ---------- */
+.home__main {
+  position: relative;
+  z-index: 2;
+  margin: clamp(36px, 10vh, 120px) auto 0;
+  text-align: center;
+}
+.home__title {
+  margin: 0 0 clamp(26px, 5vh, 56px);
+  font-family: "Bodoni Moda", "Didot", serif;
+  font-weight: 500;
+  font-size: min(5.5vw, 10.5vh);
+  white-space: nowrap;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  animation: rise-in 1.4s var(--ease) 0.35s both;
+}
+.home__title-gold {
+  background: linear-gradient(100deg, #e8cfa6 10%, #c9a574 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.query {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: min(100%, 940px);
+  height: clamp(60px, 9.5vh, 84px);
+  margin: 0 auto;
+  padding: 0 clamp(10px, 1vw, 14px) 0 clamp(20px, 2vw, 28px);
+  border: 1px solid var(--gold-line);
+  border-radius: 18px;
+  background: rgba(10, 10, 12, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  transition: border-color 0.4s var(--ease), box-shadow 0.4s var(--ease);
+  animation: rise-in 1.4s var(--ease) 0.75s both;
+}
+.query:focus-within {
+  border-color: rgba(232, 207, 166, 0.95);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 0 0 4px rgba(217, 185, 139, 0.1),
+    0 0 40px rgba(179, 22, 31, 0.18);
+}
+.query__icon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: rgba(244, 241, 234, 0.7);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+.query__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: clamp(15px, 1.2vw, 18px);
+  font-weight: 300;
+  caret-color: var(--gold);
+}
+.query__input::placeholder {
+  color: rgba(244, 241, 234, 0.5);
+}
+.query__submit {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: clamp(42px, 4.2vw, 56px);
+  height: clamp(42px, 4.2vw, 56px);
+  border: 0;
+  border-radius: 50%;
+  background: var(--red);
+  cursor: pointer;
+  transition: background 0.3s var(--ease), transform 0.3s var(--ease), opacity 0.3s var(--ease);
+}
+.query__submit svg {
+  width: 45%;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.query__submit:hover:not(:disabled) {
+  background: #cc1c27;
+  transform: translateX(2px);
+}
+.query__submit:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+.query__submit:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ---------- Stage (artwork) ---------- */
+.stage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+/* Artwork is 2:1, bottom-anchored, so the cars stay in the lower part of the viewport. */
+.stage__art {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: max(100vw, 130vh);
+  aspect-ratio: 2 / 1;
+  transform: translateX(-50%);
+}
+.stage__layer {
+  position: absolute;
+  inset: 0;
+  background: var(--art) center / 100% 100% no-repeat;
+}
+/* Red light streaks + black studio: everything above the cars. */
+.stage__layer--base {
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 48%, transparent 62%);
+  mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 48%, transparent 62%);
+  animation: fade-in 2.4s var(--ease) 0.1s both;
+}
+/* One band per car. Horizontal feathered band ∩ vertical fade-in from the studio black. */
+.stage__layer--car {
+  --edge-l: 2.5%;
+  --edge-r: 2.5%;
+  -webkit-mask-image: linear-gradient(
+      to right,
+      transparent calc(var(--from) - var(--edge-l)),
+      #000 calc(var(--from) + var(--edge-l)),
+      #000 calc(var(--to) - var(--edge-r)),
+      transparent calc(var(--to) + var(--edge-r))
+    ),
+    linear-gradient(to bottom, transparent 46%, #000 60%);
+  mask-image: linear-gradient(
+      to right,
+      transparent calc(var(--from) - var(--edge-l)),
+      #000 calc(var(--from) + var(--edge-l)),
+      #000 calc(var(--to) - var(--edge-r)),
+      transparent calc(var(--to) + var(--edge-r))
+    ),
+    linear-gradient(to bottom, transparent 46%, #000 60%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+  animation: car-in 2.1s var(--ease) var(--delay) both;
+  will-change: opacity, transform;
+}
+/* Keeps the headline/query area legible and melts the artwork's edges into black. */
+.stage__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 70% 55% at 50% 30%, rgba(5, 5, 6, 0.55), transparent 75%),
+    linear-gradient(to bottom, rgba(5, 5, 6, 0.55), transparent 22%),
+    linear-gradient(to top, rgba(5, 5, 6, 0.6), transparent 12%);
+}
+/* Ambient red — slow drift, deliberately faint. */
+.stage__glow {
+  position: absolute;
+  width: 60vw;
+  height: 60vw;
+  border-radius: 50%;
+  filter: blur(70px);
+  mix-blend-mode: screen;
+  opacity: 0;
+}
+.stage__glow--a {
+  top: -32vw;
+  left: -18vw;
+  background: radial-gradient(circle, rgba(200, 20, 30, 0.42), transparent 65%);
+  animation: fade-in 3s var(--ease) 0.3s forwards, drift-a 18s ease-in-out 3s infinite alternate;
+}
+.stage__glow--b {
+  top: -30vw;
+  right: -20vw;
+  background: radial-gradient(circle, rgba(170, 14, 24, 0.36), transparent 65%);
+  animation: fade-in 3s var(--ease) 0.5s forwards, drift-b 22s ease-in-out 3s infinite alternate;
+}
+
+/* ---------- Motion ---------- */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes car-in {
+  from { opacity: 0; transform: translateY(7%) scale(0.965); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes drift-a {
+  from { transform: translate(0, 0) scale(1); opacity: 0.85; }
+  to { transform: translate(6vw, 3vw) scale(1.12); opacity: 1; }
+}
+@keyframes drift-b {
+  from { transform: translate(0, 0) scale(1.05); opacity: 1; }
+  to { transform: translate(-6vw, 2vw) scale(0.95); opacity: 0.8; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home *,
+  .home *::before,
+  .home *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .stage__glow {
+    opacity: 0.9;
+  }
+}
+
+/* ---------- Small screens: keep it usable, not the design target ---------- */
+@media (max-width: 720px) {
+  .home__tagline,
+  .home__divider {
+    display: none;
+  }
+  .home__title {
+    white-space: normal;
+    font-size: 11vw;
+  }
+}
