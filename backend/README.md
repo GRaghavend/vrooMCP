@@ -13,9 +13,11 @@ app (`main.py`) that:
   every request (spawning the MCP server subprocess and loading ~32K CSV
   rows per request would be far too slow — see `mcp_server/client.py`'s
   own docstring on this),
-- keeps an in-memory `conversation_id -> history` dict so multi-turn chats
-  work across separate HTTP requests (`run_chat()` itself is stateless per
-  call and expects the caller to replay history),
+- persists `conversation_id -> history` in a small SQLite database
+  (`store.py`, `backend/conversations.db`, git-ignored) so multi-turn
+  chats work across separate HTTP requests *and* survive a restart
+  (`run_chat()` itself is stateless per call and expects the caller to
+  replay history),
 - exposes that as two routes over the existing `ChatRequest`/`ChatResponse`
   contract already defined in `mcp_server/models.py` (no parallel schema
   was introduced).
@@ -30,19 +32,25 @@ app (`main.py`) that:
   `brand_not_found`/`no_results` rather than raising. A genuine backend
   failure (MCP subprocess not connected, an unexpected exception) is a
   `503` instead, since there's no valid `answer_text` to return in that
-  case.
+  case. Rate-limited to 10 requests/minute per client IP (`slowapi`) — a
+  `429` if exceeded. Keyed by IP rather than a user id since there's no
+  auth yet.
 - `GET /health` — `{status, mcp_connected, tool_count}`. Lets the frontend
   show a "connecting.../unavailable" state instead of discovering it only
   via a failed chat request.
 
 ## Known v1 shortcuts
 
-- Conversation history lives in a plain in-memory `dict` on the API
-  process — no TTL, no eviction, and it's gone on every restart. Fine for
-  local dev with one process; would need a real store (Redis, a DB) before
-  running more than one API worker or persisting across restarts.
+- Conversation history has no TTL/eviction — `backend/conversations.db`
+  grows forever, there's just no risk of losing it on restart anymore.
+  SQLite is also single-writer: fine for one API process (today's setup),
+  but would need a real client-server DB (Postgres) before running more
+  than one API worker against the same history.
 - CORS origins are hardcoded to common local dev ports
   (`localhost:5173`/`localhost:3000`); tighten before any real deployment.
+- The rate limit above is a flat per-IP cap, not per-user (no auth exists
+  yet to key on), and resets on restart along with everything else
+  in-memory.
 
 ## Running
 
@@ -61,3 +69,23 @@ Run from the repo root so `backend/main.py`'s own `sys.path` setup can
 find `mcp_server/` the same way `scripts/manual_test.py` does. On startup
 it spawns `mcp_server/server.py` as a subprocess exactly once, the same
 way `scripts/manual_test.py` does for a single manual run.
+
+### Running with Docker
+
+An alternative to the manual venv setup above. Build context is the repo
+root (the `Dockerfile` lives there, not in `backend/`), since the image
+needs `mcp_server/` and `data/processed/` alongside `backend/`:
+
+```bash
+# Requires Ollama running on the host first:
+#   ollama serve
+
+docker compose up --build
+```
+
+This brings up both the backend (port 8000) and frontend (port 5173)
+containers — Ollama itself is still not containerized (see the
+`Dockerfile`'s comment for why). The compose file points the backend
+container at the host's Ollama via `OLLAMA_HOST`. See
+`frontend/Dockerfile`'s comment for how the frontend container reaches
+the backend (short version: it doesn't need to — your browser does).

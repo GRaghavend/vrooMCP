@@ -1,0 +1,33 @@
+# Brings up both the backend and frontend containers, and points the
+# backend at Ollama running on the host machine (not containerized --
+# see Dockerfile's comment on why).
+#
+# host.docker.internal resolves to the host from inside the container on
+# Docker Desktop (Mac/Windows) automatically; `extra_hosts` below adds the
+# same resolution on Linux, where it isn't automatic.
+#
+# The frontend container doesn't talk to the backend container directly --
+# api.ts's fetch() calls run in the user's browser, not inside the
+# frontend container, so they just need the backend's port published to
+# the host (see frontend/Dockerfile's comment). No shared Docker network
+# wiring between the two services is needed for that reason.
+#
+# Run:
+#   ollama serve                     # on the host, if not already running
+#   docker compose up --build
+#
+# Then: API at http://localhost:8000, UI at http://localhost:5173.
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:80"
