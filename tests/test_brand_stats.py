@@ -28,10 +28,18 @@ def test_get_brand_stats_matches_a_manual_calculation_from_the_raw_reviews():
     cleaned_reviews.csv (the raw per-review data). If someone's
     aggregation pipeline changes and the two drift apart, this test
     catches it -- it doesn't depend on hardcoding today's exact number,
-    just that the two data files still agree with each other."""
+    just that the two data files still agree with each other.
+
+    cleaned_reviews.csv deliberately keeps duplicate rows rather than
+    hard-deleting them (see eda/EDA_NPL_38K.ipynb), while brand_stats.csv
+    was aggregated after dropping duplicates (see eda/EDA.ipynb). So the
+    manual calculation here must dedupe the same way before comparing,
+    or every brand's count is off by its duplicate-row count."""
     result = get_brand_stats("Audi")
 
-    audi_reviews = cleaned_reviews_df.loc[cleaned_reviews_df["brand_name"] == "Audi"]
+    non_id_columns = [c for c in cleaned_reviews_df.columns if c != "review_id"]
+    deduped_reviews = cleaned_reviews_df.drop_duplicates(subset=non_id_columns)
+    audi_reviews = deduped_reviews.loc[deduped_reviews["brand_name"] == "Audi"]
     expected_avg = round(float(audi_reviews["rating"].mean()), 3)
     expected_count = len(audi_reviews)
 
