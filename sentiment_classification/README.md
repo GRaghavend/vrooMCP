@@ -60,7 +60,27 @@ vs. average star rating; positive should score highest, negative lowest).
 
 ## Why RoBERTa over VADER, despite VADER's higher score
 
-Read `phase4_model_comparison.csv` on its own and the choice looks wrong:
+**Plain-English version**: on paper, VADER looks like the clear winner —
+it scores higher than RoBERTa on every metric in the comparison table.
+But the "gold" labels it was graded against weren't written by a human —
+they were generated earlier *using VADER itself*. So testing VADER
+against them is VADER grading its own homework with its own answer sheet:
+of course it looks almost perfect. RoBERTa, DistilBERT, and SiEBERT didn't
+get that shortcut — they were judged fairly, as outside models with no
+answer key handed to them in advance. So their lower scores are the
+*honest* scores, not evidence they're worse. Among those three honestly-
+tested models, RoBERTa won because (1) it can say "neutral" — some
+reviews genuinely aren't clearly positive or negative, and the other two
+can only guess positive/negative on those — and (2) it was trained on
+informal, everyday text (tweets), which is a much closer match to how
+people actually write car reviews than a model trained on formal movie
+reviews. One-line version for an interview: *"VADER's high score was
+circular — it was tested against labels generated from itself — so it
+wasn't a fair comparison; RoBERTa was the only model that could handle
+neutral reviews and informal writing style, which is what the real
+38,000-review dataset actually needed."*
+
+**Full technical version**: read `phase4_model_comparison.csv` on its own and the choice looks wrong:
 VADER scores *higher* than the winning RoBERTa-3class model on all three
 metrics (accuracy 0.99 vs 0.86, macro-F1 0.66 vs 0.47, balanced accuracy
 0.99 vs 0.75). If someone opens that CSV without more context, "why not
