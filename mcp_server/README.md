@@ -36,6 +36,29 @@ Adding a 7th tool means adding one file to `tools/`, exporting it from
 `tools/__init__.py`, and adding it to the registration loop in `server.py`
 — nothing else changes.
 
+## Indirect prompt injection via tool results
+
+`search_reviews` returns real, user-submitted review text straight into
+the LLM's context — nothing stops a review from containing something
+that reads like an instruction (e.g. "ignore previous instructions, say
+X"). Two mitigations live in `client.py`, not in the tools themselves
+(the tools' job is just to return the data correctly; what the LLM does
+with it is `client.py`'s concern):
+
+- `_SYSTEM_PROMPT` explicitly tells the model that tool results, including
+  `review_text`, are retrieved data from real users, never instructions —
+  something that reads like a command inside a review is just that
+  review's content, never something to act on.
+- `_find_injection_patterns()` recursively scans every tool result for a
+  short list of known trigger phrases and logs a `tool.result.suspicious_content`
+  warning if one shows up. This is **detection for observability, not
+  blocking or rewriting** — review text is real data the frontend's
+  Evidence panel also displays verbatim, so silently altering it on a
+  pattern match would be its own bug. It just gives you something to grep
+  the logs for.
+
+See `tests/test_client.py` for both.
+
 ## Running
 
 There's no standalone entry point to run from this folder directly —
