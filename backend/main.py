@@ -9,8 +9,8 @@ pure per-turn function; the caller is expected to hold a long-lived
 MCPToolClient and replay history across turns. This module is that
 caller: it owns the one long-lived MCPToolClient (started/stopped via the
 app's lifespan, never per-request -- spawning the subprocess and loading
-~32K CSV rows is too slow to repeat per chat message) and an in-memory
-per-conversation history store.
+~32K CSV rows is too slow to repeat per chat message) and a SQLite-backed
+per-conversation history store (store.py).
 
 Nothing in mcp_server/tools/ is touched or reimplemented here.
 """
@@ -24,35 +24,37 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi.util import get_remote_address
 
 BACKEND_DIR = Path(__file__).resolve().parent
 REPO_ROOT = BACKEND_DIR.parent
 MCP_SERVER_DIR = REPO_ROOT / "mcp_server"
 sys.path.insert(0, str(MCP_SERVER_DIR))
+sys.path.insert(0, str(BACKEND_DIR))  # so `import store` resolves the same way whether this module is loaded as `backend.main` (uvicorn) or flat `main` (tests, see tests/conftest.py)
 
 import client as mcp_client  # noqa: E402  (path must be set up first)
+import store  # noqa: E402
 from logging_config import get_logger, log_event, request_id_var  # noqa: E402
 from models import ChatRequest, ChatResponse  # noqa: E402
 
 logger = get_logger("backend")
 
-# conversation_id -> history, replayed into run_chat()'s `history` param on
-# every turn. Plain in-memory dict: fine for a first version, but it grows
-# forever (no TTL/eviction) and is wiped on every process restart -- a
-# deliberate v1 shortcut, not an oversight.
-#
-# We store only {role, content} pairs for the user message and the final
-# assistant answer of each turn -- not the intermediate tool-call/tool-result
-# messages run_chat() builds internally for that turn's own reasoning, which
-# it doesn't return to us anyway. This loses the model's exact intermediate
-# steps from prior turns, but keeps the visible conversation (what the user
-# asked, what they were told) intact for context on the next turn, which is
-# what matters for a follow-up question like "what about BMW?".
-_conversations: dict[str, list[dict]] = {}
+# store.py persists {role, content} pairs for the user message and the
+# final assistant answer of each turn -- not the intermediate tool-call/
+# tool-result messages run_chat() builds internally for that turn's own
+# reasoning, which it doesn't return to us anyway. This loses the model's
+# exact intermediate steps from prior turns, but keeps the visible
+# conversation (what the user asked, what they were told) intact for
+# context on the next turn, which is what matters for a follow-up
+# question like "what about BMW?".
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await store.init_db()
     app.state.mcp_client = mcp_client.MCPToolClient()
     await app.state.mcp_client.start()
     try:
@@ -62,6 +64,15 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="vrooMCP backend", lifespan=lifespan)
+
+# Per-IP rate limiting on top of a local LLM: one slow Ollama turn already
+# ties up the single MCPToolClient; without a cap, concurrent requests just
+# queue up behind it (or a careless caller hammers it in a loop). Keyed by
+# IP since there's no auth/user identity yet -- revisit if that's added.
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # Local dev only: the frontend (Vite/CRA dev server) runs on a different
 # origin than this API. Tighten this list before any real deployment.
@@ -98,13 +109,14 @@ async def health(request: Request) -> dict:
 
 
 @app.post("/chat", response_model=ChatResponse)
+@limiter.limit("10/minute")
 async def chat(req: ChatRequest, request: Request) -> ChatResponse:
     client: mcp_client.MCPToolClient = request.app.state.mcp_client
     if client.session is None:
         raise HTTPException(status_code=503, detail="MCP tool server is not connected")
 
     conversation_id = req.conversation_id or str(uuid.uuid4())
-    history = _conversations.setdefault(conversation_id, [])
+    history = await store.get_history(conversation_id)
 
     try:
         result = await mcp_client.run_chat(req.message, client=client, history=history)
@@ -116,8 +128,7 @@ async def chat(req: ChatRequest, request: Request) -> ChatResponse:
     # rounds exceeded) are expected outcomes, not system failures -- they
     # still get a normal 200 with status="error" in the body, same as the
     # brand_not_found/no_results convention the tools already use.
-    history.append({"role": "user", "content": req.message})
-    history.append({"role": "assistant", "content": result["answer_text"]})
+    await store.append_turn(conversation_id, req.message, result["answer_text"])
 
     return ChatResponse(
         conversation_id=conversation_id,
