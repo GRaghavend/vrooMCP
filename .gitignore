@@ -5,3 +5,4 @@ logs/
 .DS_Store
 .ipynb_checkpoints/
 backend/conversations.db
+*.tsbuildinfo
