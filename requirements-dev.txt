@@ -1,0 +1,6 @@
+# Dev-only dependencies for running the test suite in tests/.
+# Install with: pip install -r requirements-dev.txt
+# (in addition to requirements.txt, which lists the app's own dependencies)
+
+pytest
+pytest-asyncio
