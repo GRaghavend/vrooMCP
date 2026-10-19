@@ -86,3 +86,13 @@ npm run lint         # eslint . -- code-quality checks (unused vars, hook misuse
 npm run build        # tsc -b && vite build -- production bundle (not run as part of this task)
 npm run preview      # serve the production build locally, after `build`
 ```
+
+### Running with Docker
+
+`Dockerfile` here is a multi-stage build (Vite build → served by nginx),
+separate from the backend's own `Dockerfile` at the repo root. Normally
+run together via `docker compose up --build` from the repo root (see
+`../backend/README.md`), which brings this up on `http://localhost:5173`.
+`nginx.conf` adds an SPA fallback (`try_files ... /index.html`) since
+`router.ts` uses real History-API paths (`/chat`), not hash routing —
+without it, a direct load or refresh of `/chat` would 404.

@@ -1,3 +1,4 @@
+import { ChartNoAxesCombined } from "lucide-react";
 import type { EvidenceSection } from "../evidence";
 import { evidenceTitle } from "../evidence";
 import { colorForBrand } from "../brandColors";
@@ -14,15 +15,15 @@ export default function EvidencePane({ sections, activeToolName, onAsk }: Props)
   const overallOk = hasData || !hasStatus;
 
   return (
-    <aside className="evidence-pane">
-      <header className="evidence-header">
-        <div>
-          <div className="evidence-eyebrow mono">Evidence{activeToolName ? ` · ${activeToolName}` : ""}</div>
-          <div className="evidence-title">{evidenceTitle(sections)}</div>
-        </div>
-        {sections.length > 0 && (
+    <aside className="panel panel--evidence">
+      {sections.length > 0 && (
+        <header className="evidence-header">
+          <div>
+            <div className="evidence-eyebrow">Evidence{activeToolName ? ` · ${activeToolName}` : ""}</div>
+            <div className="evidence-title">{evidenceTitle(sections)}</div>
+          </div>
           <span
-            className="status-badge mono"
+            className="status-badge"
             style={{
               color: overallOk ? "var(--status-ok-color)" : "var(--status-warn-color)",
               borderColor: overallOk ? "var(--status-ok-border)" : "var(--status-warn-border)",
@@ -30,16 +31,20 @@ export default function EvidencePane({ sections, activeToolName, onAsk }: Props)
           >
             {overallOk ? "ok" : "attention"}
           </span>
-        )}
-      </header>
+        </header>
+      )}
 
       <div className="evidence-scroll">
         {sections.length === 0 && (
-          <p className="evidence-empty">
-            Ask a question in the chat — brand stats, complaints or praises on a topic, a
-            rating trend, or a review search — and whatever the assistant's tool calls return
-            will be drawn here.
-          </p>
+          <div className="evidence-empty">
+            <span className="evidence-empty__icon">
+              <ChartNoAxesCombined aria-hidden="true" />
+            </span>
+            <p className="evidence-empty__title">Insights will appear here</p>
+            <p className="evidence-empty__body">
+              Ask a question to see comparative charts, trends and key insights.
+            </p>
+          </div>
         )}
 
         {sections.map((section, i) => (
@@ -70,11 +75,11 @@ function EvidenceSectionView({ section, onAsk }: { section: EvidenceSection; onA
         <div className="tile-grid">
           {tiles.map((t) => (
             <div className="tile" key={t.label}>
-              <span className="tile-label mono">{t.label}</span>
-              <span className="tile-value mono" style={t.accent ? { color: "var(--cyan)" } : undefined}>
+              <span className="tile-label">{t.label}</span>
+              <span className="tile-value" style={t.accent ? { color: "var(--gold)" } : undefined}>
                 {t.value}
               </span>
-              <span className="tile-sub mono">{t.sub}</span>
+              <span className="tile-sub">{t.sub}</span>
             </div>
           ))}
         </div>
@@ -90,7 +95,7 @@ function EvidenceSectionView({ section, onAsk }: { section: EvidenceSection; onA
         <div className="card">
           <div className="card-head">
             <span className="card-head-title">Average rating by brand</span>
-            <span className="card-head-meta mono">0 – 5 · bar opacity = sample size</span>
+            <span className="card-head-meta">0 – 5 · bar opacity = sample size</span>
           </div>
           {section.entries.map((e) => (
             <div className="bar-row" key={e.brand_name}>
@@ -106,12 +111,12 @@ function EvidenceSectionView({ section, onAsk }: { section: EvidenceSection; onA
                 />
               </span>
               <span className="bar-value">
-                <span className="bar-value-main mono">{e.stats.avg_rating.toFixed(2)}</span>
-                <span className="bar-value-sub mono">{e.stats.review_count.toLocaleString()} rev</span>
+                <span className="bar-value-main">{e.stats.avg_rating.toFixed(2)}</span>
+                <span className="bar-value-sub">{e.stats.review_count.toLocaleString()} rev</span>
               </span>
             </div>
           ))}
-          <span className="trend-footnote mono">
+          <span className="trend-footnote">
             n = {totalN.toLocaleString()} reviews · avg model year {avgYear.toFixed(1)}
           </span>
         </div>
@@ -140,7 +145,7 @@ function EvidenceSectionView({ section, onAsk }: { section: EvidenceSection; onA
                     />
                     {g.brand_name} · {g.sentiment === "negative" ? "complaints" : "praises"}
                   </span>
-                  <span className="card-head-meta mono">
+                  <span className="card-head-meta">
                     {g.topic_filter ? "topic_filter set" : `${g.items.length} topics`}
                   </span>
                 </div>
@@ -148,7 +153,7 @@ function EvidenceSectionView({ section, onAsk }: { section: EvidenceSection; onA
                   <div className="topic-row" key={item.topic_label} title={`${item.topic_label} — ${item.top_keywords}`}>
                     <div className="topic-row-head">
                       <span className="topic-label">{item.topic_label}</span>
-                      <span className="topic-count mono">{item.count.toLocaleString()}</span>
+                      <span className="topic-count">{item.count.toLocaleString()}</span>
                     </div>
                     <span className="topic-track">
                       <span
@@ -156,7 +161,7 @@ function EvidenceSectionView({ section, onAsk }: { section: EvidenceSection; onA
                         style={{ width: `${(item.count / max) * 100}%`, background: color }}
                       />
                     </span>
-                    <span className="topic-kw mono">{item.top_keywords}</span>
+                    <span className="topic-kw">{item.top_keywords}</span>
                   </div>
                 ))}
               </div>
@@ -209,14 +214,14 @@ function EvidenceSectionView({ section, onAsk }: { section: EvidenceSection; onA
           <svg viewBox="0 0 440 190" style={{ width: "100%", height: "auto", display: "block", overflow: "visible" }}>
             {gridVals.map((v, i) => (
               <g key={i}>
-                <line x1={30} y1={py(v)} x2={436} y2={py(v)} stroke="oklch(0.27 0.008 265)" strokeWidth={1} />
-                <text x={24} y={py(v) + 3} textAnchor="end" fill="oklch(0.55 0.01 265)" fontFamily="JetBrains Mono, monospace" fontSize={9}>
+                <line x1={30} y1={py(v)} x2={436} y2={py(v)} stroke="rgba(244, 241, 234, 0.1)" strokeWidth={1} />
+                <text x={24} y={py(v) + 3} textAnchor="end" fill="rgba(244, 241, 234, 0.4)" fontFamily="Inter, sans-serif" fontSize={9}>
                   {v.toFixed(1)}
                 </text>
               </g>
             ))}
             {tickYears.map((y) => (
-              <text key={y} x={px(y)} y={182} textAnchor="middle" fill="oklch(0.55 0.01 265)" fontFamily="JetBrains Mono, monospace" fontSize={9}>
+              <text key={y} x={px(y)} y={182} textAnchor="middle" fill="rgba(244, 241, 234, 0.4)" fontFamily="Inter, sans-serif" fontSize={9}>
                 {y}
               </text>
             ))}
@@ -236,7 +241,7 @@ function EvidenceSectionView({ section, onAsk }: { section: EvidenceSection; onA
               );
             })}
           </svg>
-          <span className="trend-footnote mono">
+          <span className="trend-footnote">
             {yMax - yMin + 1} model years · {totalN.toLocaleString()} reviews
           </span>
         </div>
@@ -246,28 +251,28 @@ function EvidenceSectionView({ section, onAsk }: { section: EvidenceSection; onA
     case "reviews": {
       return (
         <div className="review-list">
-          <span className="review-meta mono">
+          <span className="review-meta">
             {section.matches.length} matches · query "{section.query}"
           </span>
           {section.matches.map((m) => (
             <article className="review-card" key={m.review_id}>
               <div className="review-card-head">
                 <span className="review-badge-row">
-                  <span className="review-badge mono">
+                  <span className="review-badge">
                     {m.brand_name} {m.car_year}
                   </span>
                   <span
                     className="review-stars"
-                    style={{ color: m.rating >= 4 ? "var(--pos)" : m.rating <= 2 ? "var(--neg)" : "oklch(0.78 0.11 85)" }}
+                    style={{ color: m.rating >= 4 ? "var(--gold)" : m.rating <= 2 ? "var(--neg)" : "rgba(244, 241, 234, 0.6)" }}
                   >
                     {"★★★★★".slice(0, Math.round(m.rating))}
                     {"☆☆☆☆☆".slice(0, 5 - Math.round(m.rating))}
                   </span>
                 </span>
-                <span className="review-date mono">{m.date}</span>
+                <span className="review-date">{m.date}</span>
               </div>
               <p className="review-text">{m.review_text}</p>
-              <span className="review-footer-meta mono">
+              <span className="review-footer-meta">
                 #{m.review_id} · {m.word_count} words
               </span>
             </article>
@@ -285,14 +290,14 @@ function EvidenceSectionView({ section, onAsk }: { section: EvidenceSection; onA
             const border = isOk ? "var(--status-ok-border)" : "var(--status-warn-border)";
             return (
               <div className="status-card" key={i} style={{ borderColor: border }}>
-                <span className="status-tag mono" style={{ color }}>
+                <span className="status-tag" style={{ color }}>
                   {item.status}
                 </span>
                 <span className="status-title">{item.title}</span>
                 <span className="status-body">{item.body}</span>
                 {item.options.length > 0 && (
                   <div>
-                    <span className="status-options-label mono">available options</span>
+                    <span className="status-options-label">available options</span>
                     <div className="status-options-row">
                       {item.options.map((opt) => (
                         <button
